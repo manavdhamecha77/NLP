@@ -1,0 +1,8 @@
+IndicCorp Statistics
+
+Total Sentences : 2470
+Total Words : 174619
+Total Characters : 211930
+Average Sentence Length : 70.69595141700405
+Average Word Length : 1.2136709063733042
+TTR : 0.01720316804013309

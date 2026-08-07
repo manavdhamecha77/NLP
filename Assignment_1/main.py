@@ -1,83 +1,46 @@
 import pandas as pd
 
-from tokenizer import sentence_tokenizer
-from tokenizer import word_tokenizer
-
+from tokenizer import sentence_tokenizer, word_tokenizer
 from statistics import corpus_statistics
 
 
-def process_file(
-    input_path,
-    txt_output,
-    parquet_output
-):
+def process_file(input_file, text_file, parquet_file):
 
-    tokenized_sentences = []
+    with open(input_file, "r", encoding="utf-8") as f:
+        text = f.read()
 
-    with open(
-        input_path,
-        "r",
-        encoding="utf-8"
-    ) as file:
-
-        text = file.read()
-
+    # Split Sentences
     sentences = sentence_tokenizer(text)
 
+    # Split Words
+    tokenized = []
+
     for sentence in sentences:
+        tokenized.append(word_tokenizer(sentence))
 
-        tokens = word_tokenizer(sentence)
+    # Save tokens 
+    with open(text_file, "w", encoding="utf-8") as f:
+        for sentence in tokenized:
+            f.write(" ".join(sentence) + "\n")
 
-        tokenized_sentences.append(tokens)
+    # Parquet Files
+    data = []
 
-    with open(
-        txt_output,
-        "w",
-        encoding="utf-8"
-    ) as file:
+    for sentence in tokenized:
+        data.append(" ".join(sentence))
 
-        for sentence in tokenized_sentences:
+    df = pd.DataFrame({"sentence": data})
 
-            line = " ".join(sentence)
+    df.to_parquet(parquet_file)
 
-            file.write(line + "\n")
-
-    df = pd.DataFrame(
-        {
-            "sentence": [
-                " ".join(sentence)
-                for sentence in tokenized_sentences
-            ]
-        }
-    )
-
-    df.to_parquet(parquet_output)
-
-    stats = corpus_statistics(
-        tokenized_sentences
-    )
-
-    return stats
+    # Calculate statistics
+    return corpus_statistics(tokenized)
 
 
-indic_stats = process_file(
+stats = process_file(
     "data/gujarati.txt",
     "output/indic_tokens.txt",
     "output/indic_tokens.parquet"
 )
 
-# oscar_stats = process_file(
-#     "data/oscar.txt",
-#     "output/oscar_tokens.txt",
-#     "output/oscar_tokens.parquet"
-# )
-
-print("\nIndicCorp Statistics\n")
-
-for key, value in indic_stats.items():
-    print(key, ":", value)
-
-# print("\nOSCAR Statistics\n")
-
-# for key, value in oscar_stats.items():
-#     print(key, ":", value)
+print(stats)

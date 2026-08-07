@@ -9,8 +9,6 @@ OUTPUT_DIR = "data"
 
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
-print("Loading dataset...")
-
 dataset = load_dataset(
     "ai4bharat/IndicCorpV2",
     "indiccorp_v2",
@@ -20,8 +18,6 @@ dataset = load_dataset(
 )
 
 sentences = []
-
-print("Collecting sentences...")
 
 with tqdm(total=TARGET_LINES) as pbar:
     for sample in dataset:

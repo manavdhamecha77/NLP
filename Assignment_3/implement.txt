@@ -1,0 +1,32 @@
+FST Logic
+
+Input word
+    ↓
+Is it directly in noun lexicon?
+    ↓ Yes
+root + N + SG
+    ↓ No
+Does it end in "ies"?
+    ↓ Yes
+Convert ies → y
+    ↓
+Check root in lexicon
+    ↓
+root + N + PL
+    ↓ No
+Does it end in "es"?
+    ↓ Yes
+Check if root ends in s/z/x/ch/sh
+    ↓
+root + N + PL
+    ↓ No
+Does it end in normal "s"?
+    ↓ Yes
+Remove s
+    ↓
+Check root in lexicon
+    ↓
+root + N + PL
+    ↓
+Otherwise
+Invalid Word

@@ -1,0 +1,10 @@
+You are given a dataset in JSON format text_segmentation_dataset.json. The dataset is a 
+snapshot from the large Brown corpus. You need to implement two text segmentation 
+techniques to segment the text into words and report their performance. 
+1.  Greedy Based Approach that matches the longest word 
+2.  Dynamic Programming Approach that increases the log probability of the text [Hint: 
+Frequencies of Words are given] 
+ 
+You need to report two evaluation metrics. 
+1.  Accuracy 
+2.  Edit Distance 

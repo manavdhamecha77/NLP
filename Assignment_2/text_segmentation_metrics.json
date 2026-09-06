@@ -1,0 +1,28 @@
+{
+  "dataset": {
+    "file": "text_segmentation_dataset.json",
+    "vocabulary_size": 1500,
+    "test_case_count": 1000,
+    "total_corpus_words": 735040
+  },
+  "greedy": {
+    "exact_matches": 691,
+    "incorrect_cases": 309,
+    "exact_accuracy": 0.691,
+    "exact_accuracy_percent": 69.1,
+    "word_accuracy": 0.8343584054834053,
+    "word_accuracy_percent": 83.44,
+    "total_edit_distance": 1260,
+    "average_edit_distance": 1.26
+  },
+  "dynamic_programming": {
+    "exact_matches": 982,
+    "incorrect_cases": 18,
+    "exact_accuracy": 0.982,
+    "exact_accuracy_percent": 98.2,
+    "word_accuracy": 0.9903365079365078,
+    "word_accuracy_percent": 99.03,
+    "total_edit_distance": 37,
+    "average_edit_distance": 0.037
+  }
+}

@@ -3,7 +3,7 @@ from tqdm import tqdm
 import os
 
 LANGUAGE_SPLIT = "guj_Gujr"
-TARGET_LINES = 1000
+TARGET_LINES = 100_000
 
 OUTPUT_DIR = "data"
 

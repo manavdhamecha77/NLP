@@ -2,7 +2,7 @@ from datasets import load_dataset
 from tqdm import tqdm
 import os
 
-TARGET_LINES = 1000
+TARGET_LINES = 100_000
 
 os.makedirs("data", exist_ok=True)
 

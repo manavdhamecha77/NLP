@@ -23,10 +23,7 @@ This project implements four statistical language models using tokenized Gujarat
 ## Files
 
 - `split.py` – Splits the tokenized corpus into training, development, and test sets.
-- `unigram.py` – Implements the Unigram language model.
-- `bigram.py` – Implements the Bigram language model.
-- `trigram.py` – Implements the Trigram language model.
-- `quadgram.py` – Implements the Quadrigram language model.
+- `ngram.py` – Implements the N-gram language model.
 - `laplace_smoothing.py` – Implements Add-1/Laplace smoothing.
 - `perplexity.py` – Calculates perplexity for all four models.
 - `main.py` – Executes the complete language modeling pipeline.

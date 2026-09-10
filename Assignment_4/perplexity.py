@@ -158,7 +158,6 @@ def main():
     ]:
 
         print(f"\n{data_name}")
-        print("-" * 60)
 
         for model, lower_model in models:
 

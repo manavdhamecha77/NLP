@@ -1,35 +1,37 @@
-from perplexity import perplexity
+from perplexity import calculate
 
 
-def load_sentences(filename):
-    with open(filename, "r", encoding="utf-8") as f:
-        return [line.strip() for line in f if line.strip()]
+def main():
+
+    models = [
+        ("unigram", None),
+        ("bigram", "unigram"),
+        ("trigram", "bigram"),
+        ("quadgram", "trigram")
+    ]
+
+    print("ADD-K SMOOTHING")
+    print("K = 0.3")
+
+    for name, lower in models:
+
+        print(f"\n{name.capitalize()}")
+
+        dev = calculate(
+            name,
+            "../Assignment_4/data/dev.txt",
+            lower
+        )
+
+        test = calculate(
+            name,
+            "../Assignment_4/data/test.txt",
+            lower
+        )
+
+        print(f"Development Perplexity: {dev:.4f}")
+        print(f"Test Perplexity:        {test:.4f}")
 
 
-dev = load_sentences("../Assignment_4/data/dev.txt")
-test = load_sentences("../Assignment_4/data/test.txt")
-
-models = {
-    "Unigram": ("../Assignment_4/models/unigram.db", 1),
-    "Bigram": ("../Assignment_4/models/bigram.db", 2),
-    "Trigram": ("../Assignment_4/models/trigram.db", 3),
-    "Quadgram": ("../Assignment_4/models/quadgram.db", 4)
-}
-
-print("Add-K smoothing: K = 0.3")
-
-print("\nDevelopment perplexity:")
-
-for name, (path, n) in models.items():
-    print(
-        f"{name}:",
-        perplexity(path, dev, n)
-    )
-
-print("\nTest perplexity:")
-
-for name, (path, n) in models.items():
-    print(
-        f"{name}:",
-        perplexity(path, test, n)
-    )
+if __name__ == "__main__":
+    main()

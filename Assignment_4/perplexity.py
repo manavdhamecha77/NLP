@@ -1,191 +1,178 @@
 import math
-import sqlite3
+import pickle
+from tqdm import tqdm
 
 
-def unigram_perplexity(db_path, sentences):
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
-
-    cursor.execute("SELECT total, vocabulary FROM meta")
-    total, vocabulary = cursor.fetchone()
-
-    log_probability = 0
-    count = 0
-
-    for sentence in sentences:
-        for word in sentence.split():
-            cursor.execute(
-                "SELECT count FROM counts WHERE word=?",
-                (word,)
-            )
-
-            result = cursor.fetchone()
-            word_count = result[0] if result else 0
-
-            probability = (
-                (word_count + 1)
-                / (total + vocabulary)
-            )
-
-            log_probability += math.log(probability)
-            count += 1
-
-    conn.close()
-
-    return math.exp(-log_probability / count)
+def load_model(path):
+    with open(path, "rb") as f:
+        return pickle.load(f)
 
 
-def bigram_perplexity(db_path, sentences):
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
-
-    cursor.execute("SELECT vocabulary FROM meta")
-    vocabulary = cursor.fetchone()[0]
-
-    log_probability = 0
-    count = 0
-
-    for sentence in sentences:
-        words = ["<s>"] + sentence.split() + ["</s>"]
-
-        for i in range(len(words) - 1):
-            w1 = words[i]
-            w2 = words[i + 1]
-
-            cursor.execute(
-                "SELECT count FROM counts WHERE w1=? AND w2=?",
-                (w1, w2)
-            )
-
-            result = cursor.fetchone()
-            ngram_count = result[0] if result else 0
-
-            cursor.execute(
-                "SELECT count FROM contexts WHERE word=?",
-                (w1,)
-            )
-
-            result = cursor.fetchone()
-            context_count = result[0] if result else 0
-
-            probability = (
-                (ngram_count + 1)
-                / (context_count + vocabulary)
-            )
-
-            log_probability += math.log(probability)
-            count += 1
-
-    conn.close()
-
-    return math.exp(-log_probability / count)
+def load_vocab():
+    with open("models/vocab.pkl", "rb") as f:
+        return pickle.load(f)
 
 
-def trigram_perplexity(db_path, sentences):
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
+def encode_sentence(line, vocab):
+    ids = [vocab["<s>"]]
 
-    cursor.execute("SELECT vocabulary FROM meta")
-    vocabulary = cursor.fetchone()[0]
+    for word in line.split():
+        ids.append(vocab.get(word, vocab["<UNK>"]))
 
-    log_probability = 0
-    count = 0
+    ids.append(vocab["</s>"])
 
-    for sentence in sentences:
-        words = ["<s>", "<s>"] + sentence.split() + ["</s>"]
-
-        for i in range(len(words) - 2):
-            w1, w2, w3 = words[i:i + 3]
-
-            cursor.execute(
-                """
-                SELECT count
-                FROM counts
-                WHERE w1=? AND w2=? AND w3=?
-                """,
-                (w1, w2, w3)
-            )
-
-            result = cursor.fetchone()
-            ngram_count = result[0] if result else 0
-
-            cursor.execute(
-                """
-                SELECT count
-                FROM contexts
-                WHERE w1=? AND w2=?
-                """,
-                (w1, w2)
-            )
-
-            result = cursor.fetchone()
-            context_count = result[0] if result else 0
-
-            probability = (
-                (ngram_count + 1)
-                / (context_count + vocabulary)
-            )
-
-            log_probability += math.log(probability)
-            count += 1
-
-    conn.close()
-
-    return math.exp(-log_probability / count)
+    return ids
 
 
-def quadgram_perplexity(db_path, sentences):
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
+def pack(ids, bits):
+    key = 0
 
-    cursor.execute("SELECT vocabulary FROM meta")
-    vocabulary = cursor.fetchone()[0]
+    for x in ids:
+        key = (key << bits) | x
 
-    log_probability = 0
-    count = 0
+    return key
 
-    for sentence in sentences:
-        words = (
-            ["<s>", "<s>", "<s>"]
-            + sentence.split()
-            + ["</s>"]
+
+def perplexity(model_name, data_path, lower_model_name=None):
+
+    model = load_model(
+        f"models/{model_name}.pkl"
+    )
+
+    lower_model = None
+
+    if lower_model_name:
+        lower_model = load_model(
+            f"models/{lower_model_name}.pkl"
         )
 
-        for i in range(len(words) - 3):
-            w1, w2, w3, w4 = words[i:i + 4]
+    vocab = load_vocab()
 
-            cursor.execute(
-                """
-                SELECT count
-                FROM counts
-                WHERE w1=? AND w2=? AND w3=? AND w4=?
-                """,
-                (w1, w2, w3, w4)
+    counts = model["counts"]
+    V = model["vocab_size"]
+    bits = model["bits"]
+    n = model["n"] if "n" in model else {
+        "unigram": 1,
+        "bigram": 2,
+        "trigram": 3,
+        "quadgram": 4
+    }[model_name]
+
+    log_probability = 0.0
+    N = 0
+
+    with open(data_path, "r", encoding="utf-8") as f:
+
+        for line in tqdm(
+            f,
+            total=1000,
+            desc=model_name,
+            unit="sent"
+        ):
+
+            ids = encode_sentence(line, vocab)
+
+            if n == 1:
+
+                total = model["total"]
+
+                for word_id in ids[1:]:
+
+                    count = counts.get(
+                        word_id,
+                        0
+                    )
+
+                    probability = (
+                        count + 1
+                    ) / (
+                        total + V
+                    )
+
+                    log_probability += math.log(
+                        probability
+                    )
+
+                    N += 1
+
+            else:
+
+                lower_counts = lower_model["counts"]
+
+                for i in range(len(ids) - n + 1):
+
+                    ngram = ids[i:i + n]
+                    context = ids[i:i + n - 1]
+
+                    ngram_key = pack(
+                        ngram,
+                        bits
+                    )
+
+                    context_key = pack(
+                        context,
+                        bits
+                    )
+
+                    ngram_count = counts.get(
+                        ngram_key,
+                        0
+                    )
+
+                    context_count = lower_counts.get(
+                        context_key,
+                        0
+                    )
+
+                    probability = (
+                        ngram_count + 1
+                    ) / (
+                        context_count + V
+                    )
+
+                    log_probability += math.log(
+                        probability
+                    )
+
+                    N += 1
+
+    return math.exp(
+        -log_probability / N
+    )
+
+
+def main():
+
+    models = [
+        ("unigram", None),
+        ("bigram", "unigram"),
+        ("trigram", "bigram"),
+        ("quadgram", "trigram")
+    ]
+
+    print("LAPLACE SMOOTHING - PERPLEXITY")
+
+    for data_name, data_path in [
+        ("Development", "data/dev.txt"),
+        ("Test", "data/test.txt")
+    ]:
+
+        print(f"\n{data_name}")
+        print("-" * 60)
+
+        for model, lower_model in models:
+
+            score = perplexity(
+                model,
+                data_path,
+                lower_model
             )
 
-            result = cursor.fetchone()
-            ngram_count = result[0] if result else 0
-
-            cursor.execute(
-                """
-                SELECT count
-                FROM contexts
-                WHERE w1=? AND w2=? AND w3=?
-                """,
-                (w1, w2, w3)
+            print(
+                f"{model.capitalize():10s}: "
+                f"{score:.4f}"
             )
 
-            result = cursor.fetchone()
-            context_count = result[0] if result else 0
 
-            probability = (
-                (ngram_count + 1)
-                / (context_count + vocabulary)
-            )
-
-            log_probability += math.log(probability)
-            count += 1
-
-    conn.close()
-
-    return math.exp(-log_probability / count)
+if __name__ == "__main__":
+    main()

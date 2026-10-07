@@ -1,0 +1,11 @@
+Unigram   : 157,668 unique
+Bigram    : 1,102,653 unique
+Trigram   : 4,134,901 unique
+Quadgram  : 11,026,700 unique
+
+Model       Development PPL    Test PPL
+----------------------------------------
+Unigram        76.9130          76.5091
+Bigram         37.3829          36.8265
+Trigram        59.9614          58.1678
+Quadgram      235.7884         223.1115

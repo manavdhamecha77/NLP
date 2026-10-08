@@ -1,0 +1,19 @@
+FINAL RESULTS
+================================================================================
+Technique               Model                   Dev           Test
+--------------------------------------------------------------------------------
+Interpolated            Bigram              37.6679        37.0970
+Interpolated            Trigram             19.3709        19.0532
+Interpolated            Quadgram            13.3970        13.0957
+Good-Turing             Bigram              38.9526        38.2748
+Good-Turing             Trigram             15.4264        14.9429
+Good-Turing             Quadgram            15.1195        14.3212
+Katz Backoff            Bigram              38.2416        37.7223
+Katz Backoff            Trigram             13.6433        13.3575
+Katz Backoff            Quadgram             9.5060         9.1827
+Stupid Backoff          Bigram              38.0765        37.5630
+Stupid Backoff          Trigram             13.1937        12.9150
+Stupid Backoff          Quadgram             8.7514         8.4608
+Kneser-Ney              Bigram              27.7463        27.2089
+Kneser-Ney              Trigram             13.3868        13.1087
+Kneser-Ney              Quadgram             9.0299         8.7186
